@@ -4,11 +4,6 @@
 
 本リポジトリは、最新のxcodeでビルドしたopencv2.frameworkをreleaseページにアップロードするために作成されたリポジトリです。
 
-### ビルド環境
-- CMake (>=2.8.8)
-- Xcode (>=4.2)
-[opencv swift build documentation](https://docs.opencv.org/4.x/d5/da3/tutorial_ios_install.html)
-
 ### swift opencv2.frameworkのビルド
 ```
 cd ~/
