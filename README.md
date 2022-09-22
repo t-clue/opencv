@@ -6,18 +6,22 @@
 DR内ではreleaseページにアップロードされたopencv2.frameworkをCarthageでインストールし、利用することになります。
 
 ### ビルド環境
-
+- xcode
+- python3
+- cmake
+- swift
 
 ### swift opencv2.frameworkのビルド
-ビルドは、本家のリポジトリを使用して行います。
 ```
 cd ~/
-git clone https://github.com/opencv/opencv
+git clone git@github.com:t-clue/opencv.git
 ```
 
 使用したいバージョンに移動
 ```
 cd opencv
+git remote add upstream https://github.com/opencv/opencv
+git fetch upstream
 git checkout 4.6.0
 ```
 
