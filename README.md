@@ -28,6 +28,9 @@ git checkout 4.6.0
 作成されたiosディレクトリ内にopencv2.frameworkが作成されます。
 ```
 cd ~/
+
+// python3 opencv/platforms/ios/build_framework.py <build dir>: <build dir>にビルドしたframeworkなどを作成する。<build dir>は自動で作成される
+// --without <module> : 指定したモジュールを含めずにビルドを行う
 python3 opencv/platforms/ios/build_framework.py --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo ios
 ```
 
