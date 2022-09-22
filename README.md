@@ -1,24 +1,35 @@
 ## OpenCV: Open Source Computer Vision Library
 
-### Resources
+- [本家リポジトリ](https://github.com/opencv/opencv)
 
-* Homepage: <https://opencv.org>
-  * Courses: <https://opencv.org/courses>
-* Docs: <https://docs.opencv.org/4.x/>
-* Q&A forum: <https://forum.opencv.org>
-  * previous forum (read only): <http://answers.opencv.org>
-* Issue tracking: <https://github.com/opencv/opencv/issues>
-* Additional OpenCV functionality: <https://github.com/opencv/opencv_contrib> 
+本リポジトリは、最新のxcodeでビルドしたopencv2.frameworkをreleaseページにアップロードするために作成されたリポジトリです。
+DR内ではreleaseページにアップロードされたopencv2.frameworkをCarthageでインストールし、利用することになります。
+
+### ビルド環境
 
 
-### Contributing
+### swift opencv2.frameworkのビルド
+ビルドは、本家のリポジトリを使用して行います。
+```
+cd ~/
+git clone https://github.com/opencv/opencv
+```
 
-Please read the [contribution guidelines](https://github.com/opencv/opencv/wiki/How_to_contribute) before starting work on a pull request.
+使用したいバージョンに移動
+```
+cd opencv
+git checkout 4.6.0
+```
 
-#### Summary of the guidelines:
+ビルド
+作成されたiosディレクトリ内にopencv2.frameworkが作成されます。
+```
+cd ~/
+python3 opencv/platforms/ios/build_framework.py --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo ios
+```
 
-* One pull request per issue;
-* Choose the right base branch;
-* Include tests and documentation;
-* Clean up "oops" commits before submitting;
-* Follow the [coding style guide](https://github.com/opencv/opencv/wiki/Coding_Style_Guide).
+zipコマンドで圧縮し、releaseページにアップロードしてください。
+```
+cd ios
+zip -r opencv-4.6.0-ios-framework.zip opencv2.framework 
+```
