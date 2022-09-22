@@ -16,7 +16,7 @@ cd ~/
 git clone git@github.com:t-clue/opencv.git
 ```
 
-使用したいバージョンに移動
+本家のレポジトリから使用したいバージョンをチェックアウト
 ```
 cd opencv
 git remote add upstream https://github.com/opencv/opencv
