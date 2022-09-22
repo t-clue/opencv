@@ -3,7 +3,6 @@
 - [本家リポジトリ](https://github.com/opencv/opencv)
 
 本リポジトリは、最新のxcodeでビルドしたopencv2.frameworkをreleaseページにアップロードするために作成されたリポジトリです。
-DR内ではreleaseページにアップロードされたopencv2.frameworkをCarthageでインストールし、利用することになります。
 
 ### ビルド環境
 - xcode
