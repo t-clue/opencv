@@ -1,24 +1,35 @@
 ## OpenCV: Open Source Computer Vision Library
 
-### Resources
+- [本家リポジトリ](https://github.com/opencv/opencv)
 
-* Homepage: <https://opencv.org>
-  * Courses: <https://opencv.org/courses>
-* Docs: <https://docs.opencv.org/4.x/>
-* Q&A forum: <https://forum.opencv.org>
-  * previous forum (read only): <http://answers.opencv.org>
-* Issue tracking: <https://github.com/opencv/opencv/issues>
-* Additional OpenCV functionality: <https://github.com/opencv/opencv_contrib> 
+本リポジトリは、最新のxcodeでビルドしたopencv2.frameworkをreleaseページにアップロードするために作成されたリポジトリです。
 
+### swift opencv2.frameworkのビルド
+```
+cd ~/
+git clone git@github.com:t-clue/opencv.git
+```
 
-### Contributing
+本家のリポジトリから使用したいバージョンをチェックアウト
+```
+cd opencv
+git remote add upstream https://github.com/opencv/opencv
+git fetch upstream
+git checkout 4.6.0
+```
 
-Please read the [contribution guidelines](https://github.com/opencv/opencv/wiki/How_to_contribute) before starting work on a pull request.
+ビルド
+作成されたiosディレクトリ内にopencv2.frameworkが作成されます。
+```
+cd ~/
 
-#### Summary of the guidelines:
+# python3 build_framework.py <build dir>: <build dir>にビルドしたframeworkなどを作成する。<build dir>は自動で作成される
+# --without <module> : 指定したモジュールを含めずにビルドを行う
+python3 opencv/platforms/ios/build_framework.py --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo ios
+```
 
-* One pull request per issue;
-* Choose the right base branch;
-* Include tests and documentation;
-* Clean up "oops" commits before submitting;
-* Follow the [coding style guide](https://github.com/opencv/opencv/wiki/Coding_Style_Guide).
+zipコマンドで圧縮し、releaseページにアップロードしてください。
+```
+cd ios
+zip -r opencv-4.6.0-ios-framework.zip opencv2.framework 
+```
