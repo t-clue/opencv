@@ -587,6 +587,8 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
 
     [window setContentView:[[CVView alloc] init]];
 
+    [NSApp activateIgnoringOtherApps:YES];
+
     [window setHasShadow:YES];
     [window setAcceptsMouseMovedEvents:YES];
     [window useOptimizedDrawing:YES];
@@ -624,7 +626,7 @@ CV_IMPL int cvWaitKey (int maxWait)
          inMode:NSDefaultRunLoopMode
          dequeue:YES];
 
-        if([event type] == NSKeyDown) {
+        if([event type] == NSKeyDown && [[event characters] length]) {
             returnCode = [[event characters] characterAtIndex:0];
             break;
         }
@@ -738,6 +740,31 @@ void cvSetModeWindow_COCOA( const char* name, double prop_value )
     [localpool drain];
 
     __END__;
+}
+
+double cvGetPropVisible_COCOA(const char* name)
+{
+    double    result = -1;
+    CVWindow* window = nil;
+
+    CV_FUNCNAME("cvGetPropVisible_COCOA");
+
+    __BEGIN__;
+    if (name == NULL)
+    {
+        CV_ERROR(CV_StsNullPtr, "NULL name string");
+    }
+
+    window = cvGetWindow(name);
+    if (window == NULL)
+    {
+        CV_ERROR(CV_StsNullPtr, "NULL window");
+    }
+
+    result = window.isVisible ? 1 : 0;
+
+    __END__;
+    return result;
 }
 
 double cvGetPropTopmost_COCOA(const char* name)
@@ -872,8 +899,22 @@ static NSSize constrainAspectRatio(NSSize base, NSSize constraint) {
     mp.y *= (imageSize.height / std::max(viewSize.height, 1.));
     mp.x *= (imageSize.width / std::max(viewSize.width, 1.));
 
-    if( mp.x >= 0 && mp.y >= 0 && mp.x < imageSize.width && mp.y < imageSize.height )
-        mouseCallback(type, mp.x, mp.y, flags, mouseParam);
+    if( [event type] == NSEventTypeScrollWheel ) {
+      if( event.hasPreciseScrollingDeltas ) {
+        mp.x = int(event.scrollingDeltaX);
+        mp.y = int(event.scrollingDeltaY);
+      } else {
+        mp.x = int(event.scrollingDeltaX / 0.100006);
+        mp.y = int(event.scrollingDeltaY / 0.100006);
+      }
+      if( mp.x && !mp.y && CV_EVENT_MOUSEWHEEL == type ) {
+        type = CV_EVENT_MOUSEHWHEEL;
+      }
+      mouseCallback(type, mp.x, mp.y, flags, mouseParam);
+    } else if( mp.x >= 0 && mp.y >= 0 && mp.x < imageSize.width && mp.y < imageSize.height ) {
+      mouseCallback(type, mp.x, mp.y, flags, mouseParam);
+    }
+
 }
 
 - (void)cvMouseEvent:(NSEvent *)event {
@@ -896,6 +937,11 @@ static NSSize constrainAspectRatio(NSSize base, NSSize constraint) {
     if([event type] == NSLeftMouseDragged) {[self cvSendMouseEvent:event type:CV_EVENT_MOUSEMOVE   flags:flags | CV_EVENT_FLAG_LBUTTON];}
     if([event type] == NSRightMouseDragged)	{[self cvSendMouseEvent:event type:CV_EVENT_MOUSEMOVE   flags:flags | CV_EVENT_FLAG_RBUTTON];}
     if([event type] == NSOtherMouseDragged)	{[self cvSendMouseEvent:event type:CV_EVENT_MOUSEMOVE   flags:flags | CV_EVENT_FLAG_MBUTTON];}
+    if([event type] == NSEventTypeScrollWheel) {[self cvSendMouseEvent:event type:CV_EVENT_MOUSEWHEEL   flags:flags ];}
+}
+
+-(void)scrollWheel:(NSEvent *)theEvent {
+    [self cvMouseEvent:theEvent];
 }
 - (void)keyDown:(NSEvent *)theEvent {
     //cout << "keyDown" << endl;

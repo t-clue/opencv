@@ -26,11 +26,11 @@ public:
         computeMaxIdx = false;
         globalPooling = false;
         isGlobalPooling = std::vector<bool>(3, false);
-        output_zp = params.get<int>("zeropoints");
+        output_zp = params.get<int>("zeropoints", 0);
         input_zp = params.get<int>("input_zeropoint", output_zp);
         multiplier = params.get<float>("multiplier", 1.f);
 
-        output_sc = params.get<float>("scales");
+        output_sc = params.get<float>("scales", 1.f);
         input_sc =  multiplier * output_sc;
 
         hasDynamicShapes = params.get<bool>("has_dynamic_shapes", false);
@@ -89,10 +89,10 @@ public:
         if (inputs[0].dims == 3)
         {
             // Pool1D
-            kernel_size.assign(1, kernel_size[0]);
-            strides.assign(1, strides[0]);
-            pads_begin.assign(1, pads_begin[0]);
-            pads_end.assign(1, pads_end[0]);
+            kernel_size.resize(1, kernel_size[0]);
+            strides.resize(1, strides[0]);
+            pads_begin.resize(1, pads_begin[0]);
+            pads_end.resize(1, pads_end[0]);
         }
     }
 

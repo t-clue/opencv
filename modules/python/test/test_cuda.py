@@ -40,8 +40,14 @@ class cuda_test(NewOpenCVTests):
         cuMat = cv.cuda_GpuMat()
         cuMat.upload(npMat)
         self.assertTrue(cuMat.cudaPtr() != 0)
+        cuMatFromPtrSz = cv.cuda.createGpuMatFromCudaMemory(cuMat.size(),cuMat.type(),cuMat.cudaPtr(), cuMat.step)
+        self.assertTrue(cuMat.cudaPtr() == cuMatFromPtrSz.cudaPtr())
+        cuMatFromPtrRc = cv.cuda.createGpuMatFromCudaMemory(cuMat.size()[1],cuMat.size()[0],cuMat.type(),cuMat.cudaPtr(), cuMat.step)
+        self.assertTrue(cuMat.cudaPtr() == cuMatFromPtrRc.cudaPtr())
         stream = cv.cuda_Stream()
         self.assertTrue(stream.cudaPtr() != 0)
+        streamFromPtr = cv.cuda.wrapStream(stream.cudaPtr())
+        self.assertTrue(stream.cudaPtr() == streamFromPtr.cudaPtr())
         asyncstream = cv.cuda_Stream(1)  # cudaStreamNonBlocking
         self.assertTrue(asyncstream.cudaPtr() != 0)
 
@@ -63,6 +69,11 @@ class cuda_test(NewOpenCVTests):
         self.assertTrue(cuMat.cudaPtr() == 0)
         self.assertTrue(cuMat.step == 0)
         self.assertTrue(cuMat.size() == (0, 0))
+
+    def test_cuda_denoising(self):
+        self.assertEqual(True, hasattr(cv.cuda, 'fastNlMeansDenoising'))
+        self.assertEqual(True, hasattr(cv.cuda, 'fastNlMeansDenoisingColored'))
+        self.assertEqual(True, hasattr(cv.cuda, 'nonLocalMeans'))
 
 if __name__ == '__main__':
     NewOpenCVTests.bootstrap()

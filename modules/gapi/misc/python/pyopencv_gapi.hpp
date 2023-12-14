@@ -14,12 +14,21 @@
 using gapi_GKernelPackage           = cv::GKernelPackage;
 using gapi_GNetPackage              = cv::gapi::GNetPackage;
 using gapi_ie_PyParams              = cv::gapi::ie::PyParams;
+using gapi_onnx_PyParams            = cv::gapi::onnx::PyParams;
+using gapi_ov_PyParams              = cv::gapi::ov::PyParams;
 using gapi_wip_IStreamSource_Ptr    = cv::Ptr<cv::gapi::wip::IStreamSource>;
 using detail_ExtractArgsCallback    = cv::detail::ExtractArgsCallback;
 using detail_ExtractMetaCallback    = cv::detail::ExtractMetaCallback;
 using vector_GNetParam              = std::vector<cv::gapi::GNetParam>;
+using vector_GMat                   = std::vector<cv::GMat>;
 using gapi_streaming_queue_capacity = cv::gapi::streaming::queue_capacity;
 using GStreamerSource_OutputType    = cv::gapi::wip::GStreamerSource::OutputType;
+using map_string_and_int            = std::map<std::string, int>;
+using map_string_and_string         = std::map<std::string, std::string>;
+using map_string_and_string         = std::map<std::string, std::string>;
+using map_string_and_vector_size_t  = std::map<std::string, std::vector<size_t>>;
+using map_string_and_vector_float   = std::map<std::string, std::vector<float>>;
+using map_int_and_double            = std::map<int, double>;
 
 // NB: Python wrapper generate T_U for T<U>
 // This behavior is only observed for inputs
@@ -40,6 +49,7 @@ using GArray_float   = cv::GArray<double>;
 using GArray_string  = cv::GArray<std::string>;
 using GArray_Point2i = cv::GArray<cv::Point>;
 using GArray_Point2f = cv::GArray<cv::Point2f>;
+using GArray_Point3f = cv::GArray<cv::Point3f>;
 using GArray_Size    = cv::GArray<cv::Size>;
 using GArray_Rect    = cv::GArray<cv::Rect>;
 using GArray_Scalar  = cv::GArray<cv::Scalar>;
@@ -237,6 +247,7 @@ PyObject* pyopencv_from(const cv::GArg& value)
         HANDLE_CASE(STRING,    std::string);
         HANDLE_CASE(POINT,     cv::Point);
         HANDLE_CASE(POINT2F,   cv::Point2f);
+        HANDLE_CASE(POINT3F,   cv::Point3f);
         HANDLE_CASE(SIZE,      cv::Size);
         HANDLE_CASE(RECT,      cv::Rect);
         HANDLE_CASE(SCALAR,    cv::Scalar);
@@ -294,6 +305,7 @@ PyObject* pyopencv_from(const cv::detail::OpaqueRef& o)
         case cv::detail::OpaqueKind::CV_STRING    : return pyopencv_from(o.rref<std::string>());
         case cv::detail::OpaqueKind::CV_POINT     : return pyopencv_from(o.rref<cv::Point>());
         case cv::detail::OpaqueKind::CV_POINT2F   : return pyopencv_from(o.rref<cv::Point2f>());
+        case cv::detail::OpaqueKind::CV_POINT3F   : return pyopencv_from(o.rref<cv::Point3f>());
         case cv::detail::OpaqueKind::CV_SIZE      : return pyopencv_from(o.rref<cv::Size>());
         case cv::detail::OpaqueKind::CV_RECT      : return pyopencv_from(o.rref<cv::Rect>());
         case cv::detail::OpaqueKind::CV_UNKNOWN   : return pyopencv_from(o.rref<cv::GArg>());
@@ -320,6 +332,7 @@ PyObject* pyopencv_from(const cv::detail::VectorRef& v)
         case cv::detail::OpaqueKind::CV_STRING    : return pyopencv_from_generic_vec(v.rref<std::string>());
         case cv::detail::OpaqueKind::CV_POINT     : return pyopencv_from_generic_vec(v.rref<cv::Point>());
         case cv::detail::OpaqueKind::CV_POINT2F   : return pyopencv_from_generic_vec(v.rref<cv::Point2f>());
+        case cv::detail::OpaqueKind::CV_POINT3F   : return pyopencv_from_generic_vec(v.rref<cv::Point3f>());
         case cv::detail::OpaqueKind::CV_SIZE      : return pyopencv_from_generic_vec(v.rref<cv::Size>());
         case cv::detail::OpaqueKind::CV_RECT      : return pyopencv_from_generic_vec(v.rref<cv::Rect>());
         case cv::detail::OpaqueKind::CV_SCALAR    : return pyopencv_from_generic_vec(v.rref<cv::Scalar>());
@@ -490,6 +503,7 @@ static cv::detail::OpaqueRef extract_opaque_ref(PyObject* from, cv::detail::Opaq
         HANDLE_CASE(STRING,  std::string);
         HANDLE_CASE(POINT,   cv::Point);
         HANDLE_CASE(POINT2F, cv::Point2f);
+        HANDLE_CASE(POINT3F, cv::Point3f);
         HANDLE_CASE(SIZE,    cv::Size);
         HANDLE_CASE(RECT,    cv::Rect);
         HANDLE_CASE(UNKNOWN, cv::GArg);
@@ -522,6 +536,7 @@ static cv::detail::VectorRef extract_vector_ref(PyObject* from, cv::detail::Opaq
         HANDLE_CASE(STRING,    std::string);
         HANDLE_CASE(POINT,     cv::Point);
         HANDLE_CASE(POINT2F,   cv::Point2f);
+        HANDLE_CASE(POINT3F,   cv::Point3f);
         HANDLE_CASE(SIZE,      cv::Size);
         HANDLE_CASE(RECT,      cv::Rect);
         HANDLE_CASE(SCALAR,    cv::Scalar);
@@ -656,7 +671,6 @@ static cv::GRunArgs run_py_kernel(cv::detail::PyObjectHolder kernel,
     cv::GRunArgs outs;
     try
     {
-        int in_idx = 0;
         // NB: Doesn't increase reference counter (false),
         // because PyObject already have ownership.
         // In case exception decrement reference counter.
@@ -689,7 +703,6 @@ static cv::GRunArgs run_py_kernel(cv::detail::PyObjectHolder kernel,
                     util::throw_error(std::logic_error("GFrame isn't supported for custom operation"));
                     break;
             }
-            ++in_idx;
         }
 
         if (ctx.m_state.has_value())
@@ -730,7 +743,7 @@ static cv::GRunArgs run_py_kernel(cv::detail::PyObjectHolder kernel,
         else
         {
             // Seems to be impossible case.
-            GAPI_Assert(false);
+            GAPI_Error("InternalError");
         }
     }
     catch (...)
@@ -779,15 +792,14 @@ static void unpackMetasToTuple(const cv::GMetaArgs&        meta,
     }
 }
 
-static cv::GArg setup_py(cv::detail::PyObjectHolder setup,
-                         const cv::GMetaArgs&       meta,
-                         const cv::GArgs&           gargs)
+static cv::GArg run_py_setup(cv::detail::PyObjectHolder setup,
+                             const cv::GMetaArgs        &meta,
+                             const cv::GArgs            &gargs)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-    cv::GArg out;
-
+    cv::GArg state;
     try
     {
         // NB: Doesn't increase reference counter (false),
@@ -795,23 +807,20 @@ static cv::GArg setup_py(cv::detail::PyObjectHolder setup,
         // In case exception decrement reference counter.
         cv::detail::PyObjectHolder args(PyTuple_New(meta.size()), false);
         unpackMetasToTuple(meta, gargs, args);
-        // NB: Take an onwership because this state is "Python" type so it will be wrapped as-is
-        // into cv::GArg and stored in GPythonBackend. Object without ownership can't
-        // be dealocated outside this function.
-        cv::detail::PyObjectHolder result(PyObject_CallObject(setup.get(), args.get()), true);
 
+        PyObject *py_kernel_state = PyObject_CallObject(setup.get(), args.get());
         if (PyErr_Occurred())
         {
             PyErr_PrintEx(0);
             PyErr_Clear();
-            throw std::logic_error("Python kernel failed with error!");
+            throw std::logic_error("Python kernel setup failed with error!");
         }
         // NB: In fact it's impossible situation, because errors were handled above.
-        GAPI_Assert(result.get() && "Python kernel returned NULL!");
+        GAPI_Assert(py_kernel_state && "Python kernel setup returned NULL!");
 
-        if (!pyopencv_to(result.get(), out, ArgInfo("arg", false)))
+        if (!pyopencv_to(py_kernel_state, state, ArgInfo("arg", false)))
         {
-            util::throw_error(std::logic_error("Unsupported output meta type"));
+            util::throw_error(std::logic_error("Failed to convert python state"));
         }
     }
     catch (...)
@@ -820,7 +829,7 @@ static cv::GArg setup_py(cv::detail::PyObjectHolder setup,
         throw;
     }
     PyGILState_Release(gstate);
-    return out;
+    return state;
 }
 
 static GMetaArg get_meta_arg(PyObject* obj)
@@ -941,7 +950,7 @@ static PyObject* pyopencv_cv_gapi_kernels(PyObject* , PyObject* py_args, PyObjec
             gapi::python::GPythonFunctor f(
                 id.c_str(), std::bind(run_py_meta, cv::detail::PyObjectHolder{out_meta}, _1, _2),
                 std::bind(run_py_kernel, cv::detail::PyObjectHolder{run}, _1),
-                std::bind(setup_py, cv::detail::PyObjectHolder{setup}, _1, _2));
+                std::bind(run_py_setup, cv::detail::PyObjectHolder{setup}, _1, _2));
             pkg.include(f);
         }
         else

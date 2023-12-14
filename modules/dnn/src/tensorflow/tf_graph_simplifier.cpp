@@ -815,6 +815,7 @@ void RemoveIdentityOps(tensorflow::GraphDef& net)
 
         if (type == "Identity" || type == "Dropout" || type == "PlaceholderWithDefault") {
             identity_ops_idx.push_back(li);
+            CV_Assert(layer.input_size() != 0);
             identity_ops[layer.name()] = layer.input(0);
         }
     }
@@ -829,12 +830,19 @@ void RemoveIdentityOps(tensorflow::GraphDef& net)
             IdentityOpsMap::iterator it = identity_ops.find(input_op_name);
 
             if (it != identity_ops.end()) {
+                std::set<String> loopCheckSet;
                 // In case of Identity after Identity
                 while (true)
                 {
                     IdentityOpsMap::iterator nextIt = identity_ops.find(it->second);
                     if (nextIt != identity_ops.end())
+                    {
+                        // Loop check
+                        if (loopCheckSet.find(it->second) != loopCheckSet.end())
+                            CV_Error(Error::StsError, "Found a loop in your input Tensorflow model, which is illegal!");
+                        loopCheckSet.insert(it->second);
                         it = nextIt;
+                    }
                     else
                         break;
                 }
