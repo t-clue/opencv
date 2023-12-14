@@ -25,9 +25,10 @@ cd ~/
 # 必要ならばcmakeをインストール
 brew install cmake
 
-# python3 build_xcframework.py --out <build dir>: <build dir>にビルドしたframeworkなどを作成する。<build dir>は自動で作成される
+# python build_xcframework.py --out <build dir>: <build dir>にビルドしたframeworkなどを作成する。<build dir>は自動で作成される
 # --without <module> : 指定したモジュールを含めずにビルドを行う
-python3 opencv/platforms/apple/build_xcframework.py --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo --out ./build_xcframework
+# note: pythonコマンドが使えないと失敗する。python3ではNG。
+python opencv/platforms/apple/build_xcframework.py --out ./build_xcframework --iphoneos_archs "arm64" --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo --iphoneos_deployment_target 14.0
 ```
 
 zipコマンドで圧縮し、releaseページにアップロードしてください。
