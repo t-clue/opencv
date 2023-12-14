@@ -15,21 +15,26 @@ git clone git@github.com:t-clue/opencv.git
 cd opencv
 git remote add upstream https://github.com/opencv/opencv
 git fetch upstream
-git checkout 4.6.0
+git checkout 4.8.0
 ```
 
 ビルド
 作成されたiosディレクトリ内にopencv2.frameworkが作成されます。
 ```
 cd ~/
+# 必要ならばcmakeをインストール
+brew install cmake
 
-# python3 build_framework.py <build dir>: <build dir>にビルドしたframeworkなどを作成する。<build dir>は自動で作成される
+# python build_xcframework.py --out <build dir>: <build dir>にビルドしたframeworkなどを作成する。<build dir>は自動で作成される
+# --<platform>_archs <arch> : 指定したプラットフォーム, アーキテクチャのみ含める
+# --build_only_specified_archs : 未指定のプラットフォームを含めない
 # --without <module> : 指定したモジュールを含めずにビルドを行う
-python3 opencv/platforms/ios/build_framework.py --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo ios
+# note: pythonコマンドが使えないと失敗する。python3ではNG。
+python opencv/platforms/apple/build_xcframework.py --out ./build_xcframework --iphoneos_archs "arm64" --iphonesimulator_archs "x86_64,arm64" --build_only_specified_archs --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo --iphoneos_deployment_target 14.0
 ```
 
 zipコマンドで圧縮し、releaseページにアップロードしてください。
 ```
-cd ios
-zip -r opencv-4.6.0-ios-framework.zip opencv2.framework 
+cd build_xcframework
+zip -y -r opencv-4.8.0-ios-framework.zip opencv2.xcframework 
 ```
