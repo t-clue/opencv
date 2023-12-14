@@ -15,17 +15,19 @@ git clone git@github.com:t-clue/opencv.git
 cd opencv
 git remote add upstream https://github.com/opencv/opencv
 git fetch upstream
-git checkout 4.6.0
+git checkout 4.8.0
 ```
 
 ビルド
 作成されたiosディレクトリ内にopencv2.frameworkが作成されます。
 ```
 cd ~/
+# 必要ならばcmakeをインストール
+brew install cmake
 
-# python3 build_framework.py <build dir>: <build dir>にビルドしたframeworkなどを作成する。<build dir>は自動で作成される
+# python3 build_xcframework.py --out <build dir>: <build dir>にビルドしたframeworkなどを作成する。<build dir>は自動で作成される
 # --without <module> : 指定したモジュールを含めずにビルドを行う
-python3 opencv/platforms/ios/build_framework.py --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo ios
+python3 opencv/platforms/apple/build_xcframework.py --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo --out ./build_xcframework
 ```
 
 zipコマンドで圧縮し、releaseページにアップロードしてください。
