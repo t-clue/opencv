@@ -36,5 +36,5 @@ python opencv/platforms/apple/build_xcframework.py --out ./build_xcframework --i
 zipコマンドで圧縮し、releaseページにアップロードしてください。
 ```
 cd build_xcframework
-zip -y -r opencv2.xcframework.zip opencv2.xcframework 
+zip -y -r opencv-4.8.0-ios-framework.zip opencv2.xcframework 
 ```
