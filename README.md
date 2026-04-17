@@ -29,8 +29,10 @@ brew install cmake
 # --<platform>_archs <arch> : 指定したプラットフォーム, アーキテクチャのみ含める
 # --build_only_specified_archs : 未指定のプラットフォームを含めない
 # --without <module> : 指定したモジュールを含めずにビルドを行う
-# note: pythonコマンドが使えないと失敗する。python3ではNG。
-python opencv/platforms/apple/build_xcframework.py --out ./build_xcframework --iphoneos_archs "arm64" --iphonesimulator_archs "x86_64,arm64" --build_only_specified_archs --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo --iphoneos_deployment_target 14.0
+# note: 近年の macOS には `python` (Python 2) が同梱されていないため `python3` を使う。
+# note: `--iphoneos_deployment_target` は Apps-iOS 側の `IPHONEOS_DEPLOYMENT_TARGET = 16.0` に合わせる。
+#       14.0 / 15.0 を指定すると Xcode 26 系の iPhoneOS SDK ヘッダと整合せず `_stdio.h` 付近でビルドが失敗する。
+python3 opencv/platforms/apple/build_xcframework.py --out ./build_xcframework --iphoneos_archs "arm64" --iphonesimulator_archs "x86_64,arm64" --build_only_specified_archs --without videoio --without video --without ts  --without python --without objdetect --without js --without java --without gapi --without dnn --without photo --iphoneos_deployment_target 16.0
 ```
 
 zipコマンドで圧縮し、releaseページにアップロードしてください。
