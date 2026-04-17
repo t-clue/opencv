@@ -137,7 +137,14 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #  endif
 #endif
 
-#if defined(MACOS) || defined(TARGET_OS_MAC)
+/* Classic Mac OS only. `TARGET_OS_MAC` has been intentionally dropped
+ * here: in modern Apple SDKs (macOS/iOS/tvOS/watchOS) it is always
+ * defined as 1 and no longer implies "Classic Mac OS", which wrongly
+ * defined `fdopen` to `NULL` on iOS and broke the system `<stdio.h>`
+ * prototype of `fdopen()` with Xcode 26 iPhoneOS/iPhoneSimulator SDK.
+ * On modern Apple, `fdopen()` is a normal POSIX function.
+ */
+#if defined(MACOS)
 #  define OS_CODE  7
 #  ifndef Z_SOLO
 #    if defined(__MWERKS__) && __dest_os != __be_os && __dest_os != __win32_os
