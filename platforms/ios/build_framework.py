@@ -444,6 +444,41 @@ class Builder:
                     if filestem in platform_name_map:
                         os.rename(os.path.join(dirname, filename), os.path.join(dirname, platform_name_map[filestem] + fileext))
 
+            # Fat framework needs a <name>-Swift.h that works for every slice.
+            # Each arch's <name>-Swift.h is guarded by `#if defined(__<ARCH>__)` only for
+            # that arch, so the copy from builddirs[0] above is incomplete on the
+            # other arches (e.g. `#error unsupported Swift architecture`). Emit a
+            # per-arch bridging header and a tiny router that includes the right
+            # one at preprocessing time.
+            arch_macro_map = {
+                "arm": "__arm__",
+                "arm64": "__arm64__",
+                "i386": "__i386__",
+                "x86_64": "__x86_64__",
+            }
+            swift_header_fname = name + "-Swift.h"
+            per_arch_headers = []  # list of (cpp_macro, per_arch_filename)
+            for d in builddirs:
+                src = os.path.join(d, "install", "lib", name + ".framework", "Headers", swift_header_fname)
+                if not os.path.exists(src):
+                    continue
+                target = d[(d.rfind("build-") + 6):]
+                arch = target[:target.rfind("-")]
+                if arch not in arch_macro_map:
+                    continue
+                per_arch_fname = "%s-%s-Swift.h" % (name, arch)
+                shutil.copyfile(src, os.path.join(dstdir, "Headers", per_arch_fname))
+                per_arch_headers.append((arch_macro_map[arch], per_arch_fname))
+
+            if len(per_arch_headers) >= 2:
+                router_path = os.path.join(dstdir, "Headers", swift_header_fname)
+                with codecs.open(router_path, "w", "utf-8") as out:
+                    out.write("#if 0\n")
+                    for macro, fname in per_arch_headers:
+                        out.write("#elif defined(%s) && %s\n" % (macro, macro))
+                        out.write("# include \"%s\"\n" % fname)
+                    out.write("#else\n#error unsupported Swift architecture\n#endif\n")
+
         # make universal static lib
         if self.dynamic:
             libs = [os.path.join(d, "install", "lib", name + ".framework", name) for d in builddirs]
