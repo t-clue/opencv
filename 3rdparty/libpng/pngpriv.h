@@ -518,8 +518,15 @@
 #  include <float.h>
 
 #  if (defined(__MWERKS__) && defined(macintosh)) || defined(applec) || \
-    defined(THINK_C) || defined(__SC__) || defined(TARGET_OS_MAC)
-   /* We need to check that <math.h> hasn't already been included earlier
+    defined(THINK_C) || defined(__SC__)
+   /* Classic Mac OS compilers only. `TARGET_OS_MAC` has been intentionally
+    * dropped here: in modern Apple SDKs (macOS/iOS/tvOS/watchOS) it is
+    * always defined as 1 and no longer implies "Classic Mac OS", which
+    * wrongly enabled the <fp.h> branch and broke builds on Xcode 26 for
+    * iOS where <fp.h> is absent. Modern Apple platforms fall through to
+    * <math.h> below via __APPLE__/__MACH__ compilers.
+    *
+    * We need to check that <math.h> hasn't already been included earlier
     * as it seems it doesn't agree with <fp.h>, yet we should really use
     * <fp.h> if possible.
     */
